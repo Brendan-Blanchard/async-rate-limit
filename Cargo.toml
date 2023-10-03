@@ -1,0 +1,14 @@
+[package]
+name = "async-rate-limit"
+version = "0.0.2"
+edition = "2021"
+authors = ["Brendan Blanchard"]
+description = "Common traits for rate limiting and implementations of common schemes waiting in async contexts."
+license = "MIT"
+repository = ""
+keywords = ["tokio", "async", "rate", "limiting"]
+
+
+[dependencies]
+chrono = { version = "0.4.26", default-features = false }
+tokio = { version = "1.29.1", features = ["full", "test-util"] }
