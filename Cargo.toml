@@ -7,6 +7,7 @@ description = "Common traits for rate limiting and implementations in async cont
 license = "MIT"
 repository = "https://github.com/Brendan-Blanchard/async-rate-limit"
 keywords = ["tokio", "async", "rate", "limiting"]
+categories = ["asynchronous", "concurrency", "web-programming"]
 
 
 [dependencies]
