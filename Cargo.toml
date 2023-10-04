@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/Brendan-Blanchard/async-rate-limit"
 keywords = ["tokio", "async", "rate", "limiting"]
 categories = ["asynchronous", "concurrency", "web-programming"]
+exclude = [".idea", ".gitignore", ".github"]
 
 
 [dependencies]
