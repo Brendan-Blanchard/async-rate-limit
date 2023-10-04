@@ -1,11 +1,11 @@
 [package]
 name = "async-rate-limit"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 authors = ["Brendan Blanchard"]
-description = "Common traits for rate limiting and implementations of common schemes waiting in async contexts."
+description = "Common traits for rate limiting and implementations in async contexts."
 license = "MIT"
-repository = ""
+repository = "https://github.com/Brendan-Blanchard/async-rate-limit"
 keywords = ["tokio", "async", "rate", "limiting"]
 
 
