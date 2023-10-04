@@ -1,7 +1,7 @@
 # async-rate-limit
 A basic Tokio rate-limiting library providing two traits and common implementations.
 
-![badge](https://github.com/Brendan-Blanchard/async-rate-limit/actions/workflows/main.yml/badge.svg)
+![badge](https://github.com/Brendan-Blanchard/async-rate-limit/actions/workflows/main.yml/badge.svg) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Usage:
 ```rust
