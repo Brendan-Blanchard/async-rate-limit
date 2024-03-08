@@ -161,7 +161,8 @@ impl TokenBucketState {
     ) {
         let mut acquired_tokens_guard = acquired_tokens.lock().await;
 
-        let owned_tokens = (*acquired_tokens_guard).drain(0..replace_amount);
+        let release_amount = replace_amount.min(acquired_tokens_guard.len());
+        let owned_tokens = (*acquired_tokens_guard).drain(0..release_amount);
 
         for token in owned_tokens.into_iter() {
             drop(token);
@@ -236,6 +237,31 @@ mod tests {
         let mut limiter = TokenBucketRateLimiter::new(state_mutex);
 
         // bucket should not accumulate more than max tokens when not in use
+        sleep(Duration::from_secs(180)).await;
+
+        let start = Instant::now();
+
+        limiter.wait_with_cost(8).await;
+        limiter.wait_with_cost(3).await;
+
+        let end = Instant::now();
+        let elapsed = end - start;
+
+        assert!(elapsed > Duration::from_secs(3));
+        assert!(elapsed < Duration::from_secs(4));
+    }
+
+    #[tokio::test]
+    async fn test_bucket_does_not_replace_over() {
+        pause();
+
+
+        let state = TokenBucketState::new(10, 100, Duration::from_secs(3));
+        let state_mutex = Arc::new(Mutex::new(state));
+        let mut limiter = TokenBucketRateLimiter::new(state_mutex);
+
+        // bucket should not accumulate more than max tokens when not in use, and
+        // replacing a large amount should not over-drain the permits Vec and panic
         sleep(Duration::from_secs(180)).await;
 
         let start = Instant::now();
