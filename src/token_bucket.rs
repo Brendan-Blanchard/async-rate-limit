@@ -255,7 +255,6 @@ mod tests {
     async fn test_bucket_does_not_replace_over() {
         pause();
 
-
         let state = TokenBucketState::new(10, 100, Duration::from_secs(3));
         let state_mutex = Arc::new(Mutex::new(state));
         let mut limiter = TokenBucketRateLimiter::new(state_mutex);

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use crate::limiters::{RateLimiter, VariableCostRateLimiter};
-use tokio;
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::Duration;
 
