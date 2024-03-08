@@ -1,6 +1,6 @@
 [package]
 name = "async-rate-limit"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 authors = ["Brendan Blanchard"]
 description = "Common traits for rate limiting and implementations in async contexts."
@@ -12,5 +12,4 @@ exclude = [".idea", ".gitignore", ".github"]
 
 
 [dependencies]
-chrono = { version = "0.4.26", default-features = false }
 tokio = { version = "1.29.1", features = ["full", "test-util"] }
