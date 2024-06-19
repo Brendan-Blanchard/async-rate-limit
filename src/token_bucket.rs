@@ -14,10 +14,15 @@ use tokio::time::Duration;
 /// The behavior of it's implementation of [`VariableCostRateLimiter`] can be seen in this
 /// [`example`].
 ///
+/// TokenBucketRateLimiters implement [`Clone`], so cloning a rate limiter will clone the
+/// underlying state, resulting in two separate rate limiters that share the same underlying state.
+/// This allows for structs containing a rate limiter, like an HTTP or REST client, to be [`Clone`]
+/// while both instances will respect rate limits.
+///
 /// *Trying to acquire more than the possible available amount of tokens will deadlock.*
 ///
 /// [`example`]: struct.TokenBucketRateLimiter.html#example-a-variable-cost-api-rate-limit
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TokenBucketRateLimiter {
     /// Potentially shared, mutable state required to implement the token bucket scheme.
     state: Arc<Mutex<TokenBucketState>>,
@@ -226,6 +231,27 @@ mod tests {
 
         assert!(elapsed > Duration::from_secs(3));
         assert!(elapsed < Duration::from_secs(4));
+    }
+
+    #[tokio::test]
+    async fn test_cloned_instances_share_underlying_state() {
+        pause();
+
+        let state = TokenBucketState::new(10, 2, Duration::from_secs(5));
+        let state_mutex = Arc::new(Mutex::new(state));
+        let mut limiter = TokenBucketRateLimiter::new(state_mutex);
+
+        let start = Instant::now();
+
+        limiter.wait_with_cost(8).await;
+        // clone should share same state and have to wait
+        limiter.clone().wait_with_cost(3).await;
+
+        let end = Instant::now();
+        let elapsed = end - start;
+
+        assert!(elapsed > Duration::from_secs(5));
+        assert!(elapsed < Duration::from_secs(6));
     }
 
     #[tokio::test]
