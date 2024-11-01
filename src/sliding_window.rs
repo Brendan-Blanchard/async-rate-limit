@@ -156,8 +156,8 @@ mod tests {
     use tokio::time::{pause, Instant};
 
     mod rate_limiter_tests {
-        use crate::limiters::{ThreadsafeRateLimiter, RateLimiter};
         use super::*;
+        use crate::limiters::{RateLimiter, ThreadsafeRateLimiter};
 
         #[tokio::test]
         async fn test_proceeds_immediately_below_limit() {
