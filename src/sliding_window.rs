@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::limiters::{RateLimiter, VariableCostRateLimiter};
+use crate::limiters::{ThreadsafeRateLimiter, VariableCostRateLimiter};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::Duration;
 
@@ -87,9 +87,9 @@ impl SlidingWindowRateLimiter {
     }
 }
 
-impl RateLimiter for SlidingWindowRateLimiter {
+impl ThreadsafeRateLimiter for SlidingWindowRateLimiter {
     /// Wait with an implied cost of 1, see the [initial example](#example-simple-rate-limiter)
-    async fn wait_until_ready(&mut self) {
+    async fn wait_until_ready(&self) {
         let permit = self
             .permits
             .clone()
@@ -156,11 +156,12 @@ mod tests {
     use tokio::time::{pause, Instant};
 
     mod rate_limiter_tests {
+        use crate::limiters::{ThreadsafeRateLimiter, RateLimiter};
         use super::*;
 
         #[tokio::test]
         async fn test_proceeds_immediately_below_limit() {
-            let mut limiter = SlidingWindowRateLimiter::new(Duration::from_secs(3), 7);
+            let limiter = SlidingWindowRateLimiter::new(Duration::from_secs(3), 7);
 
             let start = Instant::now();
 
@@ -180,7 +181,7 @@ mod tests {
         async fn test_waits_at_limit() {
             pause();
 
-            let mut limiter = SlidingWindowRateLimiter::new(Duration::from_secs(1), 3);
+            let limiter = SlidingWindowRateLimiter::new(Duration::from_secs(1), 3);
 
             let start = Instant::now();
 
@@ -210,7 +211,7 @@ mod tests {
                 let limiter_clone = Arc::new(tokio::sync::Mutex::new(limiter.clone()));
 
                 let task = tokio::spawn(async move {
-                    let mut limiter = limiter_clone.lock().await;
+                    let limiter = limiter_clone.lock().await;
 
                     (*limiter).wait_until_ready().await;
                 });
@@ -227,6 +228,50 @@ mod tests {
 
             assert!(duration > Duration::from_secs(3));
             assert!(duration < Duration::from_secs(4));
+        }
+
+        #[tokio::test]
+        async fn test_trait_threadsafe_bounds() {
+            let limiter = SlidingWindowRateLimiter::new(Duration::from_secs(3), 7);
+
+            assert_threadsafe(&limiter).await;
+        }
+
+        #[tokio::test]
+        async fn test_trait_non_threadsafe_bounds() {
+            let mut limiter = SlidingWindowRateLimiter::new(Duration::from_secs(3), 7);
+
+            assert_non_threadsafe(&mut limiter).await;
+        }
+
+        async fn assert_threadsafe<T: ThreadsafeRateLimiter>(limiter: &T) {
+            let start = Instant::now();
+
+            for _ in 0..7 {
+                limiter.wait_until_ready().await;
+            }
+
+            let end = Instant::now();
+
+            let duration = end - start;
+
+            assert!(duration > Duration::from_secs(0));
+            assert!(duration < Duration::from_millis(100));
+        }
+
+        async fn assert_non_threadsafe<T: RateLimiter>(limiter: &mut T) {
+            let start = Instant::now();
+
+            for _ in 0..7 {
+                limiter.wait_until_ready().await;
+            }
+
+            let end = Instant::now();
+
+            let duration = end - start;
+
+            assert!(duration > Duration::from_secs(0));
+            assert!(duration < Duration::from_millis(100));
         }
     }
 
