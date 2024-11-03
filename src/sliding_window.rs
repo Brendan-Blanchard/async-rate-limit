@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::limiters::{ThreadsafeRateLimiter, VariableCostRateLimiter};
+use crate::limiters::{ThreadsafeRateLimiter, ThreadsafeVariableRateLimiter, VariableCostRateLimiter};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::Duration;
 
@@ -101,7 +101,7 @@ impl ThreadsafeRateLimiter for SlidingWindowRateLimiter {
     }
 }
 
-impl VariableCostRateLimiter for SlidingWindowRateLimiter {
+impl ThreadsafeVariableRateLimiter for SlidingWindowRateLimiter {
     /// Wait with some variable cost per usage.
     ///
     /// # Example: A Shared Variable Cost Rate Limiter
@@ -138,7 +138,7 @@ impl VariableCostRateLimiter for SlidingWindowRateLimiter {
     ///     println!("Heavy: {:?}", Instant::now());
     /// }
     /// ```
-    async fn wait_with_cost(&mut self, cost: usize) {
+    async fn wait_with_cost(&self, cost: usize) {
         let permits = self
             .permits
             .clone()
@@ -276,6 +276,7 @@ mod tests {
     }
 
     mod variable_cost_rate_limiter_tests {
+        use crate::limiters::ThreadsafeVariableRateLimiter;
         use super::*;
 
         #[tokio::test]
@@ -302,6 +303,33 @@ mod tests {
 
             let mut limiter = SlidingWindowRateLimiter::new(Duration::from_secs(1), 3);
 
+            let start = Instant::now();
+
+            limiter.wait_with_cost(3).await;
+            limiter.wait_with_cost(3).await;
+            limiter.wait_with_cost(3).await;
+
+            let end = Instant::now();
+
+            let duration = end - start;
+
+            assert!(duration > Duration::from_secs(2));
+            assert!(duration < Duration::from_secs(3));
+        }
+
+        #[tokio::test]
+        async fn test_with_threadsafe_bound() {
+            pause();
+
+            let limiter = SlidingWindowRateLimiter::new(Duration::from_secs(1), 3);
+
+            assert_threadsafe(&limiter).await;
+        }
+
+        async fn assert_threadsafe<T>(limiter: &T)
+        where
+            T: ThreadsafeVariableRateLimiter,
+        {
             let start = Instant::now();
 
             limiter.wait_with_cost(3).await;
