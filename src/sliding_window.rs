@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::limiters::{ThreadsafeRateLimiter, ThreadsafeVariableRateLimiter, VariableCostRateLimiter};
+use crate::limiters::{
+    ThreadsafeRateLimiter, ThreadsafeVariableRateLimiter, VariableCostRateLimiter,
+};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::Duration;
 
@@ -276,8 +278,8 @@ mod tests {
     }
 
     mod variable_cost_rate_limiter_tests {
-        use crate::limiters::ThreadsafeVariableRateLimiter;
         use super::*;
+        use crate::limiters::ThreadsafeVariableRateLimiter;
 
         #[tokio::test]
         async fn test_proceeds_immediately_below_limit() {
