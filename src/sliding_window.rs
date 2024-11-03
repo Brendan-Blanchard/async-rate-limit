@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use crate::limiters::{
-    ThreadsafeRateLimiter, ThreadsafeVariableRateLimiter, VariableCostRateLimiter,
-};
+use crate::limiters::{ThreadsafeRateLimiter, ThreadsafeVariableRateLimiter};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::Duration;
 
